@@ -1,6 +1,6 @@
 General:
-  lid_topic: "/livox/lidar_192_168_1_119"
-  imu_topic: "/livox/imu_192_168_1_119"
+  lid_topic: "/livox/lidar_192_168_1_166"
+  imu_topic: "/livox/imu_192_168_1_166"
   save_path: "/home/zc/data/map/"
   previous_map: ""
   bagname: "0428_2025-04-30-11-25-59"

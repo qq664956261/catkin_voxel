@@ -700,7 +700,7 @@ public:
     double gnm = x_curr.g.norm();
     std::cout << "gnm:" << gnm << std::endl;
     std::cout << "is_degrade:" << is_degrade << std::endl;
-    if (is_degrade || gnm < 9.6 || gnm > 10.0)
+    if (is_degrade || gnm < 9.5 || gnm > 10.0)
     {
       converge_flag = 0;
     }
@@ -713,10 +713,10 @@ public:
         iter->second->clear_slwd(sws[0]);
         delete iter->second;
       }
-      for (int i = 0; i < octos.size(); i++)
-        delete octos[i];
+      //for (int i = 0; i < octos.size(); i++)
+        //delete octos[i];
       //surf_map.clear();
-      octos.clear();
+      //octos.clear();
       //surf_map_slide.clear();
     }
 
@@ -899,7 +899,7 @@ public:
 
 
     // 1. 读入 PCD
-    std::string map_path = "/home/zc/map/voxel.pcd";
+    std::string map_path = "/home/zc/map/2025.pcd";
       map_pc.reset(new pcl::PointCloud<PointType>());
       pcl::io::loadPCDFile(map_path, *map_pc);
       // 2. 下采样（可选，减少点数）
@@ -1709,13 +1709,21 @@ for(auto &kv : surf_map){
 
       if (motion_init_flag)
       {
+        x_curr.p = Eigen::Vector3d(18.6706, -6.89947, 0);
+        Eigen::Matrix3d R;
+        R << -0.0761413, 0.997064, 0.00807032, 
+        -0.997066, -0.0762005, 0.00730508, 
+        0.0078986, -0.00749042, 0.999941;
+        x_curr.R = R;
+        std::cout<<"x_curr.p"<<x_curr.p<<std::endl;
+        std::cout<<"x_curr.R"<<x_curr.R<<std::endl;
         int init = initialization(imus, hess, voxhess, pwld, pcl_curr);
         std::cout<<"init:"<<init<<std::endl;
 
         if (init == 1)
         {
           motion_init_flag = 0;
-          std:;cout<<"motion_init_flag:"<<motion_init_flag<<std::endl;
+          std::cout<<"motion_init_flag:"<<motion_init_flag<<std::endl;
         }
         else
         {
