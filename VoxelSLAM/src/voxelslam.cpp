@@ -648,7 +648,7 @@ public:
       for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
       {
 
-        iter->second->recut(win_size, x_buf, sws[0]);
+        //iter->second->recut(win_size, x_buf, sws[0]);
         iter->second->tras_opt(voxhess);
       }
       if (voxhess.plvec_voxels.size() < 10)
@@ -1773,7 +1773,13 @@ for(auto &kv : surf_map){
         t2 = ros::Time::now().toSec();
 
         //multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
-        multi_recut(surf_map, win_count, x_buf, voxhess, sws);
+        //multi_recut(surf_map, win_count, x_buf, voxhess, sws);
+        for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
+        {
+  
+          //iter->second->recut(win_size, x_buf, sws[0]);
+          iter->second->tras_opt(voxhess);
+        }
         t3 = ros::Time::now().toSec();
         //std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
         if (degrade_cnt > degrade_bound)
