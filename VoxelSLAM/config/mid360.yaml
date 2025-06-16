@@ -3,7 +3,7 @@ General:
   imu_topic: "/livox/imu_192_168_1_119"
   save_path: "/home/zc/data/map/"
   previous_map: ""
-  bagname: "0430_2025-04-30-11-25-59"
+  bagname: "0428_2025-04-30-11-25-59"
   lidar_type: 0
   blind: 0.5 # 0.5
   point_filter_num: 3
@@ -39,7 +39,7 @@ LocalBA:
   min_ba_point: 1
   plane_eigen_value_thre: [4.0, 4.0, 4.0, 4.0]
   imu_coef: 0.0002
-  thread_num: 5
+  thread_num: 1
 
 Loop:
   jud_default: 0.45

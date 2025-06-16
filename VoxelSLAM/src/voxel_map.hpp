@@ -981,10 +981,11 @@ public:
         sw = new SlideWindow(wdsize);
     }
     if(!isexist) isexist = true;
-
     int mord = mp[ord];
     if(layer < max_layer)
+    {
       sw->points[mord].push_back(pv);
+    }
     sw->pcrs_local[mord].push(pv.pnt);
     pcr_add.push(pw);
     Eigen::Matrix<double, 9, 9> Bi;
@@ -1039,7 +1040,6 @@ public:
         leaves[leafnum]->voxel_center[2] = voxel_center[2] + (2*xyz[2]-1)*quater_length;
         leaves[leafnum]->quater_length = quater_length / 2;
       }
-
       leaves[leafnum]->allocate(ord, pv, pw, sws);
     }
 
@@ -1147,15 +1147,19 @@ public:
 
   void recut(int win_count, vector<IMUST> &x_buf, vector<SlideWindow*> &sws)
   {
+
     if(octo_state == 0)
     {
+
       if(layer >= 0)
       {
+
         opt_state = -1;
         if(pcr_add.N <= min_point[layer])
         {
           plane.is_plane = false; return;
         }
+
         if(!isexist || sw == nullptr) return;
 
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> saes(pcr_add.cov());
@@ -1170,7 +1174,7 @@ public:
         else if(layer >= max_layer)
           return;
       }
-      
+
       if(pcr_fix.N != 0)
       {
         fix_divide(sws);
@@ -1342,6 +1346,7 @@ public:
         float dis_to_plane = fabs(plane.normal.dot(wld - plane.center));
         float dis_to_center = (plane.center - wld).squaredNorm();
         float range_dis = (dis_to_center - dis_to_plane * dis_to_plane);
+
         if(range_dis <= 3*3*plane.radius)
         {
           Eigen::Matrix<double, 1, 6> J_nq;
@@ -1576,7 +1581,6 @@ void cut_voxel_multi(unordered_map<VOXEL_LOC, OctoTree*> &feat_map, PVecPtr pvec
       feat_map[position] = ot;
       feat_tem_map[position] = ot;
     }
-
     map_pvec[ot].push_back(i);
   }
 
@@ -1619,14 +1623,17 @@ void cut_voxel_multi(unordered_map<VOXEL_LOC, OctoTree*> &feat_map, PVecPtr pvec
       }, part*i, part*(i+1), ref(sws[i])
     );
   }
-
   for(int i=0; i<thd_num; i++)
   {
     if(i == 0)
     {
       for(int j=0; j<int(part); j++)
+      {
         for(int k: octs[j]->second)
+        {
           octs[j]->first->allocate(win_count, (*pvec)[k], pwld[k], sws[0]);
+        }
+      }
     }
     else
     {
@@ -1635,6 +1642,7 @@ void cut_voxel_multi(unordered_map<VOXEL_LOC, OctoTree*> &feat_map, PVecPtr pvec
     }
     
   }
+  
 
 }
 
