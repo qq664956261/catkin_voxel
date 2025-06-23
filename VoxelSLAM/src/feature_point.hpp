@@ -323,7 +323,9 @@ public:
 
     int plsize = pl_orig.points.size();
     pl_full.reserve(plsize);
-    double t0 = pl_orig[0].timestamp;
+    //double t0 = pl_orig[0].timestamp;
+    double t0 = msg->header.stamp.toSec();
+    std::cout<<"t0:"<<std::to_string(t0)<<std::endl;
     for(int i=0; i<plsize; i++)
     {
       PointType ap;
@@ -332,7 +334,8 @@ public:
       ap.z = pl_orig.points[i].z;
       ap.intensity = pl_orig.points[i].intensity;
       // ap.curvature = (pl_orig[i].timestamp - t0) * float(1e3); //
-      ap.curvature = (pl_orig[i].timestamp - t0);
+      //ap.curvature = (pl_orig[i].timestamp - t0);
+      ap.curvature = 0;
 
       if(i % point_filter_num == 0)
       {

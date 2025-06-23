@@ -145,21 +145,21 @@ public:
       pos_imu = head.p;
       angvel_avr = head.bg;
 
-      for(; it_pcl->curvature > head.t; it_pcl--)
-      {
-        dt = it_pcl->curvature - head.t;
+      // for(; it_pcl->curvature > head.t; it_pcl--)
+      // {
+      //   dt = it_pcl->curvature - head.t;
 
-        Eigen::Matrix3d R_i = R_imu * Exp(angvel_avr, dt);
-        Eigen::Vector3d T_ei = pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - xc.p;
+      //   Eigen::Matrix3d R_i = R_imu * Exp(angvel_avr, dt);
+      //   Eigen::Vector3d T_ei = pos_imu + vel_imu * dt + 0.5 * acc_imu * dt * dt - xc.p;
 
-        Eigen::Vector3d P_i(it_pcl->x, it_pcl->y, it_pcl->z);
-        Eigen::Vector3d P_compensate = Lid_rot_to_IMU.transpose() * (xc.R.transpose() * (R_i * (Lid_rot_to_IMU * P_i + Lid_offset_to_IMU) + T_ei) - Lid_offset_to_IMU);
+      //   Eigen::Vector3d P_i(it_pcl->x, it_pcl->y, it_pcl->z);
+      //   Eigen::Vector3d P_compensate = Lid_rot_to_IMU.transpose() * (xc.R.transpose() * (R_i * (Lid_rot_to_IMU * P_i + Lid_offset_to_IMU) + T_ei) - Lid_offset_to_IMU);
 
-        it_pcl->x = P_compensate(0);
-        it_pcl->y = P_compensate(1);
-        it_pcl->z = P_compensate(2);
-        if(it_pcl == pcl_in.begin()) break;
-      }
+      //   it_pcl->x = P_compensate(0);
+      //   it_pcl->y = P_compensate(1);
+      //   it_pcl->z = P_compensate(2);
+      //   if(it_pcl == pcl_in.begin()) break;
+      // }
     }
 
   }

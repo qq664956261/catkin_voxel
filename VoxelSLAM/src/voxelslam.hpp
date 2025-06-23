@@ -58,7 +58,6 @@ void imu_handler(const sensor_msgs::Imu::ConstPtr &msg_in)
     flag = 0;
     printf("Time0: %lf\n", msg_in->header.stamp.toSec());
   }
-
   sensor_msgs::Imu::Ptr msg(new sensor_msgs::Imu(*msg_in));
   msg->linear_acceleration.x = msg->linear_acceleration.x * 9.81;
   msg->linear_acceleration.y = msg->linear_acceleration.y * 9.81;

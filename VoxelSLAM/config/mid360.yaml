@@ -3,8 +3,8 @@ General:
   imu_topic: "/livox/imu_192_168_1_166"
   save_path: "/home/zc/data/map/"
   previous_map: ""
-  bagname: "0428_2025-04-30-11-25-59"
-  lidar_type: 0
+  bagname: "0603_2025-06-03-16-31-38"
+  lidar_type: 4
   blind: 0.5 # 0.5
   point_filter_num: 3
   extrinsic_tran: [-0.011, -0.02329, 0.04412]

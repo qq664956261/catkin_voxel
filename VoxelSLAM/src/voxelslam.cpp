@@ -568,7 +568,8 @@ public:
         Eigen::Vector3d P_i(it_pcl->x, it_pcl->y, it_pcl->z);
         Eigen::Vector3d P_compensate = xc.R.transpose() * (R_i * (extrin_para.R * P_i + extrin_para.p) + T_ei);
 
-        pv.pnt = P_compensate;
+        //pv.pnt = P_compensate;
+        pv.pnt = P_i;
         pvec.push_back(pv);
         if (it_pcl == pl.begin())
           break;
@@ -1640,7 +1641,7 @@ for(auto &kv : surf_map){
       {
         break;
       }
-
+      
       deque<sensor_msgs::Imu::Ptr> imus;
       if (!sync_packages(pcl_curr, imus, odom_ekf))
       {
@@ -1694,7 +1695,6 @@ for(auto &kv : surf_map){
         sleep(0.001);
         continue;
       }
-
       static int first_flag = 1;
       if (first_flag)
       {
@@ -1709,11 +1709,11 @@ for(auto &kv : surf_map){
 
       if (motion_init_flag)
       {
-        x_curr.p = Eigen::Vector3d(18.6706, -6.89947, 0);
+        x_curr.p = Eigen::Vector3d(11.5402, 12.5136, 0);
         Eigen::Matrix3d R;
-        R << -0.0761413, 0.997064, 0.00807032, 
-        -0.997066, -0.0762005, 0.00730508, 
-        0.0078986, -0.00749042, 0.999941;
+        R << 0.032015, -0.999461, 0.00720392, 
+        0.999397, 0.0319141 , -0.0136993, 
+        0.013462, 0.00763815,  0.99988;
         x_curr.R = R;
         std::cout<<"x_curr.p"<<x_curr.p<<std::endl;
         std::cout<<"x_curr.R"<<x_curr.R<<std::endl;
