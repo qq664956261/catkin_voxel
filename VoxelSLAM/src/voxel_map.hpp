@@ -506,7 +506,7 @@ public:
     JacT *= imu_coef;
     residual *= (imu_coef * 0.5);
 
-    // printf("resi: %lf\n", residual);
+     printf("resi: %lf\n", residual);
 
     for(int i=0; i<tthd_num; i++)
     {

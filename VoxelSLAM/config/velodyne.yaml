@@ -1,20 +1,20 @@
 General:
-  lid_topic: "/velodyne_points"
-  imu_topic: "/imu/data"
-  save_path: "/home/zale/save_datas/urbannav/"
+  lid_topic: "/laserscan3d"
+  imu_topic: "/imu_nav"
+  save_path: "/home/zc/data/map"
   previous_map: ""
   bagname: "medium1"
-  lidar_type: 1
+  lidar_type: 4
   blind: 2.8
   point_filter_num: 3
-  extrinsic_tran: [0.0, 0.0, 0.28] # urbannav 
+  extrinsic_tran: [0.0, 0.0, 0.0] # urbannav 
   extrinsic_rota: [1, 0, 0, 
                    0, 1, 0, 
                    0, 0, 1]
   is_save_map: 0
 
 Odometry:
-  cov_gyr: 0.01 # 0.01
+  cov_gyr: 1 # 0.01
   cov_acc: 1
   rdw_gyr: 0.0001
   rdw_acc: 0.0001
@@ -29,14 +29,14 @@ Odometry:
 LocalBA:
   win_size: 10
   max_layer: 2 # 1
-  cov_gyr: 0.01 # 0.01
-  cov_acc: 1
+  cov_gyr: 100 # 0.01
+  cov_acc: 100
   rdw_gyr: 0.0001
   rdw_acc: 0.0001
   min_ba_point: 1
   plane_eigen_value_thre: [4.0, 4.0, 4.0, 4.0]
-  imu_coef: 0.0001
-  thread_num: 5
+  imu_coef: 0.0000000001
+  thread_num: 1
 
 Loop:
   jud_default: 0.45

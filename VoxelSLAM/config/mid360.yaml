@@ -1,7 +1,7 @@
 General:
   lid_topic: "/livox/lidar_192_168_1_166"
   imu_topic: "/livox/imu_192_168_1_166"
-  save_path: "/home/zc/data/map/"
+  save_path: "/home/zc/data/map"
   previous_map: ""
   bagname: "0603_2025-06-03-16-31-38"
   lidar_type: 4
@@ -11,7 +11,7 @@ General:
   extrinsic_rota: [1, 0, 0,
                    0, 1, 0,
                    0, 0, 1]
-  is_save_map: 1
+  is_save_map: 0
 
 Odometry:
   max_init: 30

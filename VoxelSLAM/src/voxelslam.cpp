@@ -707,13 +707,13 @@ public:
     }
     if (converge_flag == 0)
     {
-      vector<OctoTree *> octos;
-      for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
-      {
-        iter->second->tras_ptr(octos);
-        iter->second->clear_slwd(sws[0]);
-        delete iter->second;
-      }
+      // vector<OctoTree *> octos;
+      // for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
+      // {
+      //   iter->second->tras_ptr(octos);
+      //   iter->second->clear_slwd(sws[0]);
+      //   delete iter->second;
+      // }
       //for (int i = 0; i < octos.size(); i++)
         //delete octos[i];
       //surf_map.clear();
@@ -1709,12 +1709,33 @@ for(auto &kv : surf_map){
 
       if (motion_init_flag)
       {
-        x_curr.p = Eigen::Vector3d(11.5402, 12.5136, 0);
+        //0603
+        // x_curr.p = Eigen::Vector3d(11.5402, 12.5136, 0.05);
+        // Eigen::Matrix3d R;
+        // R << 0.032015, -0.999461, 0.00720392, 
+        // 0.999397, 0.0319141 , -0.0136993, 
+        // 0.013462, 0.00763815,  0.99988;
+        x_curr.p = Eigen::Vector3d(6.88, 10.85, -0.2);
         Eigen::Matrix3d R;
-        R << 0.032015, -0.999461, 0.00720392, 
-        0.999397, 0.0319141 , -0.0136993, 
-        0.013462, 0.00763815,  0.99988;
-        x_curr.R = R;
+        R << 0.991824, -0.126672, -0.0154664, 
+        0.126695, 0.991942  , 0.000484272, 
+        0.0152804, -0.00243982 ,  0.99988 ;
+        //0430
+        // x_curr.p = Eigen::Vector3d(18.6758, -6.89524, 0);
+        // Eigen::Matrix3d R;
+        // R << -0.0760827 , 0.997075 , 0.00722731 , 
+        // -0.997055 , -0.0761469  , 0.00906114 , 
+        // 0.00958497, -0.00651663 ,   0.999933 ;
+        //0630
+        // x_curr.p = Eigen::Vector3d(16.1143, 14.3976, 0.15);
+        // Eigen::Matrix3d R;
+        // R << -0.16833, -0.985633, 0.0139113, 
+        // 0.985698, -0.168423  , -0.00581409, 
+        // 0.00807353, 0.0127336 ,  0.999886 ;
+        
+
+
+         x_curr.R = R;
         std::cout<<"x_curr.p"<<x_curr.p<<std::endl;
         std::cout<<"x_curr.R"<<x_curr.R<<std::endl;
         int init = initialization(imus, hess, voxhess, pwld, pcl_curr);
@@ -1825,8 +1846,8 @@ for(auto &kv : surf_map){
         }
         else
         {
-          LI_BA_Optimizer opt_lsv;
-          opt_lsv.damping_iter(x_buf, voxhess, imu_pre_buf, &hess);
+           LI_BA_Optimizer opt_lsv;
+           opt_lsv.damping_iter(x_buf, voxhess, imu_pre_buf, &hess);
         }
 
         ScanPose *bl = new ScanPose(x_buf[0], pvec_buf[0]);
@@ -1899,17 +1920,17 @@ for(auto &kv : surf_map){
       // printf("%d: %lf %lf %lf\n", win_base + win_count, x_curr.p[0], x_curr.p[1], x_curr.p[2]);
     }
 
-    vector<OctoTree *> octos;
-    for (auto iter = surf_map.begin(); iter != surf_map.end(); iter++)
-    {
-      iter->second->tras_ptr(octos);
-      iter->second->clear_slwd(sws[0]);
-      delete iter->second;
-    }
+    // vector<OctoTree *> octos;
+    // for (auto iter = surf_map.begin(); iter != surf_map.end(); iter++)
+    // {
+    //   iter->second->tras_ptr(octos);
+    //   iter->second->clear_slwd(sws[0]);
+    //   delete iter->second;
+    // }
 
-    for (int i = 0; i < octos.size(); i++)
-      delete octos[i];
-    octos.clear();
+    // for (int i = 0; i < octos.size(); i++)
+    //   delete octos[i];
+    // octos.clear();
 
     for (int i = 0; i < sws[0].size(); i++)
       delete sws[0][i];
