@@ -149,8 +149,8 @@ public:
     Eigen::Vector3d res_v = exp_v - v_correct;
     Eigen::Vector3d exp_t = st1.R.transpose() * (st2.p - st1.p - st1.v*dtime - 0.5*dtime*dtime*st1.g);
     Eigen::Vector3d res_t = exp_t - t_correct;
-    std::cout<<"exp_t:"<<exp_t<<std::endl;
-    std::cout<<"t_correct:"<<t_correct<<std::endl;
+    // std::cout<<"exp_t:"<<exp_t<<std::endl;
+    // std::cout<<"t_correct:"<<t_correct<<std::endl;
     Eigen::Vector3d res_bg = st2.bg - st1.bg;
     Eigen::Vector3d res_ba = st2.ba - st1.ba;
 
@@ -209,7 +209,9 @@ public:
     }
 
     // return rr.squaredNorm();
-    return rr.dot(cov_inv * rr);
+    //std::cout<<"cov_inv:"<<cov_inv<<std::endl;
+     return rr.dot(cov_inv * rr);
+    //return rr.dot(rr);
   }
 
   double give_evaluate_g(IMUST &st1, IMUST &st2, Eigen::MatrixXd &jtj, Eigen::VectorXd &gg, bool jac_enable)

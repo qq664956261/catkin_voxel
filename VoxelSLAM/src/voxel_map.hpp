@@ -502,11 +502,13 @@ public:
     Eigen::Matrix<double, DIM, 1> rr;
     joc.setIdentity(); rr.setZero();
 
+    printf("1resi: %lf\n", residual);
+
     Hess *= imu_coef;
     JacT *= imu_coef;
     residual *= (imu_coef * 0.5);
 
-     printf("resi: %lf\n", residual);
+    printf("2resi: %lf\n", residual);
 
     for(int i=0; i<tthd_num; i++)
     {
@@ -518,6 +520,7 @@ public:
       residual += resis[i];
       delete mthreads[i];
     }
+    printf("3resi: %lf\n", residual);
 
     return residual;
   }

@@ -1715,6 +1715,7 @@ for(auto &kv : surf_map){
         // R << 0.032015, -0.999461, 0.00720392, 
         // 0.999397, 0.0319141 , -0.0136993, 
         // 0.013462, 0.00763815,  0.99988;
+        //laserscan3d
         x_curr.p = Eigen::Vector3d(6.88, 10.85, -0.2);
         Eigen::Matrix3d R;
         R << 0.991824, -0.126672, -0.0154664, 
@@ -1735,7 +1736,7 @@ for(auto &kv : surf_map){
         
 
 
-         x_curr.R = R;
+        x_curr.R = R;
         std::cout<<"x_curr.p"<<x_curr.p<<std::endl;
         std::cout<<"x_curr.R"<<x_curr.R<<std::endl;
         int init = initialization(imus, hess, voxhess, pwld, pcl_curr);
@@ -1796,19 +1797,22 @@ for(auto &kv : surf_map){
         keyframe_loading(jour);
         voxhess.clear();
         voxhess.win_size = win_size;
-
+        unordered_map<VOXEL_LOC, OctoTree *> temp_surf_map;
+        temp_surf_map = surf_map;
+        std::cout<<"temp_surf_map.size():"<<temp_surf_map.size()<<std::endl;
+        cut_voxel(temp_surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         // cut_voxel(surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         //cut_voxel_multi(surf_map, pvec_buf[win_count - 1], win_count - 1, surf_map_slide, win_size, pwld, sws);
         t2 = ros::Time::now().toSec();
-
+        multi_recut(temp_surf_map, win_count, x_buf, voxhess, sws);
         //multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
         //multi_recut(surf_map, win_count, x_buf, voxhess, sws);
-        for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
-        {
+        // for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
+        // {
   
-          //iter->second->recut(win_size, x_buf, sws[0]);
-          iter->second->tras_opt(voxhess);
-        }
+        //   //iter->second->recut(win_size, x_buf, sws[0]);
+        //   iter->second->tras_opt(voxhess);
+        // }
         t3 = ros::Time::now().toSec();
         //std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
         if (degrade_cnt > degrade_bound)
