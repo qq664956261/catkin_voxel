@@ -176,13 +176,13 @@ public:
     }
     string pcdname = savename + "/" + to_string(count) + ".pcd";
     pcl::io::savePCDFileBinary(pcdname, pl_save);
-    Eigen::Matrix4f poseMatrix;
-    poseMatrix.setIdentity();
-    poseMatrix.block<3, 3>(0, 0) = xx.R.cast<float>();
-    poseMatrix.block<3, 1>(0, 3) = xx.p.cast<float>();
-    pcl::transformPointCloud(pl_save,
-                             pl_save, poseMatrix);
-    *map_ptr += pl_save;
+    // Eigen::Matrix4f poseMatrix;
+    // poseMatrix.setIdentity();
+    // poseMatrix.block<3, 3>(0, 0) = xx.R.cast<float>();
+    // poseMatrix.block<3, 1>(0, 3) = xx.p.cast<float>();
+    // pcl::transformPointCloud(pl_save,
+    //                          pl_save, poseMatrix);
+    // *map_ptr += pl_save;
   }
 
   void save_pose(vector<ScanPose *> &bbuf, string &fname, string posename, string &savepath)
@@ -568,7 +568,7 @@ public:
         Eigen::Vector3d P_i(it_pcl->x, it_pcl->y, it_pcl->z);
         Eigen::Vector3d P_compensate = xc.R.transpose() * (R_i * (extrin_para.R * P_i + extrin_para.p) + T_ei);
 
-        //pv.pnt = P_compensate;
+        // pv.pnt = P_compensate;
         pv.pnt = P_i;
         pvec.push_back(pv);
         if (it_pcl == pl.begin())
@@ -616,9 +616,9 @@ public:
 
       // for (int i = 0; i < octos.size(); i++)
       //   delete octos[i];
-      //surf_map.clear();
-      //octos.clear();
-      //surf_map_slide.clear();
+      // surf_map.clear();
+      // octos.clear();
+      // surf_map_slide.clear();
 
       for (int i = 0; i < win_size; i++)
       {
@@ -639,9 +639,8 @@ public:
             pwld.push_back(x_buf[i].R * pv.pnt + x_buf[i].p);
         }
 
-        //cut_voxel(surf_map, pvec_buf[i], i, surf_map_slide, win_size, pwld, sws[0]);
+        // cut_voxel(surf_map, pvec_buf[i], i, surf_map_slide, win_size, pwld, sws[0]);
       }
-
 
       // LidarFactor voxhess(win_size);
       voxhess.clear();
@@ -649,7 +648,7 @@ public:
       for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
       {
 
-        //iter->second->recut(win_size, x_buf, sws[0]);
+        // iter->second->recut(win_size, x_buf, sws[0]);
         iter->second->tras_opt(voxhess);
       }
       if (voxhess.plvec_voxels.size() < 10)
@@ -670,7 +669,7 @@ public:
         imu_pre_buf.push_back(new IMU_PRE(x_buf[i - 1].bg, x_buf[i - 1].ba));
         imu_pre_buf.back()->push_imu(vec_imus[i]);
       }
-      std::cout<<"fabs(resis[0] - resis[1]) / resis[0]:"<<fabs(resis[0] - resis[1]) / resis[0]<<std::endl;
+      std::cout << "fabs(resis[0] - resis[1]) / resis[0]:" << fabs(resis[0] - resis[1]) / resis[0] << std::endl;
       if (fabs(resis[0] - resis[1]) / resis[0] < converge_thre && iterCnt >= 2)
       {
         for (Eigen::Matrix3d &iter : voxhess.eig_vectors)
@@ -681,12 +680,12 @@ public:
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> saes(nnt);
         eigvalue = saes.eigenvalues();
         is_degrade = eigvalue[0] < 15 ? true : false;
-        std::cout<<"eigvalue[0]:"<<eigvalue[0]<<std::endl;
+        std::cout << "eigvalue[0]:" << eigvalue[0] << std::endl;
 
         converge_thre = 0.01;
         if (converge_flag == 0)
         {
-          std::cout<<"converge_flag："<<converge_flag<<std::endl;
+          std::cout << "converge_flag：" << converge_flag << std::endl;
           align_gravity(x_buf);
           converge_flag = 1;
           continue;
@@ -714,11 +713,11 @@ public:
       //   iter->second->clear_slwd(sws[0]);
       //   delete iter->second;
       // }
-      //for (int i = 0; i < octos.size(); i++)
-        //delete octos[i];
-      //surf_map.clear();
-      //octos.clear();
-      //surf_map_slide.clear();
+      // for (int i = 0; i < octos.size(); i++)
+      // delete octos[i];
+      // surf_map.clear();
+      // octos.clear();
+      // surf_map_slide.clear();
     }
 
     printf("mn: %lf %lf %lf\n", eigvalue[0], eigvalue[1], eigvalue[2]);
@@ -745,7 +744,7 @@ public:
         pcl_send.push_back(pt);
       }
     pub_pl_func(pcl_send, pub_init);
-    std::cout<<"final converge_flag:"<<converge_flag<<std::endl;
+    std::cout << "final converge_flag:" << converge_flag << std::endl;
     return converge_flag;
   }
 };
@@ -756,7 +755,7 @@ public:
   pcl::PointCloud<PointType> pcl_path;
   IMUST x_curr, extrin_para;
   IMUEKF odom_ekf;
-  unordered_map<VOXEL_LOC, OctoTree *> surf_map, surf_map_slide;
+  unordered_map<VOXEL_LOC, OctoTree *> surf_map, surf_map_slide, surf_map_static;
   double down_size;
 
   int win_size;
@@ -764,7 +763,7 @@ public:
   vector<PVecPtr> pvec_buf;
   deque<IMU_PRE *> imu_pre_buf;
   int win_count = 0, win_base = 0;
-  vector<vector<SlideWindow *>> sws;
+  vector<vector<SlideWindow *>> sws, sws_static;
 
   vector<ScanPose *> *scanPoses;
   mutex mtx_loop;
@@ -816,9 +815,6 @@ public:
     n.param<vector<double>>("General/extrinsic_tran", vecT, vector<double>());
     n.param<vector<double>>("General/extrinsic_rota", vecR, vector<double>());
     n.param<int>("General/is_save_map", is_save_map, 0);
-   
-
-
 
     sub_imu = n.subscribe(imu_topic, 80000, imu_handler);
     if (feat.lidar_type == LIVOX)
@@ -894,84 +890,100 @@ public:
     sws.resize(thread_num);
     cout << "bagname: " << bagname << endl;
 
-
-
-
-
-
     // 1. 读入 PCD
     std::string map_path = "/home/zc/map/2025.pcd";
-      map_pc.reset(new pcl::PointCloud<PointType>());
-      pcl::io::loadPCDFile(map_path, *map_pc);
-      // 2. 下采样（可选，减少点数）
-      down_sampling_voxel(*map_pc, 0.05); // 你已有的 down_sampling_voxel
+    map_pc.reset(new pcl::PointCloud<PointType>());
+    pcl::io::loadPCDFile(map_path, *map_pc);
+    // 2. 下采样（可选，减少点数）
+    down_sampling_voxel(*map_pc, 0.05); // 你已有的 down_sampling_voxel
 
-  
-      // 3. 分配给 prior_pvec 和 pwld
-      PVecPtr prior_pvec(new PVec());
-      PLV(3)
-      pwld;
-      prior_pvec->reserve(map_pc->size());
-      pwld.reserve(map_pc->size());
+    // 3. 分配给 prior_pvec 和 pwld
+    PVecPtr prior_pvec(new PVec());
+    PLV(3)
+    pwld;
+    prior_pvec->reserve(map_pc->size());
+    pwld.reserve(map_pc->size());
+    IMUST T;
+    T.R.setIdentity();
+    T.p.setZero();
+    var_init(T, *map_pc, prior_pvec, 0.01, 0.01);
 
-      for (auto &pt : map_pc->points)
+    for (auto &pt : map_pc->points)
+    {
+      // 把 PCD 点当成 pointVar
+      pointVar pv;
+      pv.pnt = Eigen::Vector3d(pt.x, pt.y, pt.z);
+
+      // 简单起见，把协方差设为常量 * 单位阵
+      // 真实场景里也可做法线估计+KNN-PCA来求每点的局部协方差
+      // pv.var = Eigen::Matrix3d::Identity() * 1e-3;
+
+      // prior_pvec->push_back(pv);
+
+      // 世界坐标就直接等于它本身
+      pwld.push_back(pv.pnt);
+    }
+
+    // 4. 第一次调用 cut_voxel_multi，用来构建八叉树
+    sws_static.resize(thread_num);
+    for (int i = 0; i < thread_num; ++i)
+      sws_static[i].clear();
+    cut_voxel_multi(
+        /*feat_map=*/surf_map_static,
+        /*pvec=*/prior_pvec,
+        /*win_count=*/0,
+        /*feat_tem_map=*/surf_map_slide,
+        /*wdsize=*/win_size,
+        /*pwld=*/pwld,
+        /*sws=*/sws_static);
+
+    vector<IMUST> dummy_xbuf(1);
+    dummy_xbuf[0].R = Eigen::Matrix3d::Identity();
+    dummy_xbuf[0].p = Eigen::Vector3d::Zero();
+    vector<vector<SlideWindow *>> dummy_sws(1);
+    dummy_sws[0] = sws_static[0]; // 内容随便，只要非空即可
+
+    // 5) 对 surf_map 做一次 recut，计算每个节点的 eig
+    LidarFactor voxhess(win_size);
+    multi_recut(surf_map_static, // 用你的 static_map
+                /*win_count=*/1,
+                dummy_xbuf,
+                /*voxopt=*/voxhess, // 这里的 voxopt 只是暂存 eig，不用清
+                sws_static);
+
+    // 6) 遍历所有节点，一次性调用 plane_update()
+    function<void(OctoTree *)> init_plane = [&](OctoTree *node)
+    {
+      if (node->octo_state == 0 && node->layer >= 0 && node->plane.is_plane)
       {
-        // 把 PCD 点当成 pointVar
-        pointVar pv;
-        pv.pnt = Eigen::Vector3d(pt.x, pt.y, pt.z);
-  
-        // 简单起见，把协方差设为常量 * 单位阵
-        // 真实场景里也可做法线估计+KNN-PCA来求每点的局部协方差
-        pv.var = Eigen::Matrix3d::Identity() * 1e-3;
-  
-        prior_pvec->push_back(pv);
-  
-        // 世界坐标就直接等于它本身
-        pwld.push_back(pv.pnt);
+        node->plane_update();
       }
+      for (int i = 0; i < 8; i++)
+      {
+        if (node->leaves[i])
+          init_plane(node->leaves[i]);
+      }
+    };
+    for (auto &kv : surf_map_static)
+    {
+      init_plane(kv.second);
+    }
 
-      // 4. 第一次调用 cut_voxel_multi，用来构建八叉树
-      sws.resize(thread_num);
-      for(int i = 0; i < thread_num; ++i)
-        sws[i].clear();  
-      cut_voxel_multi(
-      /*feat_map=*/      surf_map,
-      /*pvec=*/          prior_pvec,
-      /*win_count=*/     0,
-      /*feat_tem_map=*/  surf_map_slide,
-      /*wdsize=*/        win_size,
-      /*pwld=*/          pwld,
-      /*sws=*/           sws);
-
-      vector<IMUST> dummy_xbuf(1);
-      dummy_xbuf[0].R = Eigen::Matrix3d::Identity();
-      dummy_xbuf[0].p = Eigen::Vector3d::Zero();
-      vector<vector<SlideWindow*>> dummy_sws(1);
-      dummy_sws[0] = sws[0];  // 内容随便，只要非空即可
-
-      // 5) 对 surf_map 做一次 recut，计算每个节点的 eig
-      LidarFactor voxhess(win_size);
-      multi_recut(surf_map,    // 用你的 static_map
-            /*win_count=*/ 1,
-            dummy_xbuf,
-            /*voxopt=*/    voxhess,   // 这里的 voxopt 只是暂存 eig，不用清
-            dummy_sws);
-
-      // 6) 遍历所有节点，一次性调用 plane_update()
-function<void(OctoTree*)> init_plane = [&](OctoTree* node){
-  if(node->octo_state == 0 && node->layer >= 0 && node->plane.is_plane){
-    node->plane_update();
+    std::cout << "load map finish" << std::endl;
   }
-  for(int i=0; i<8; i++){
-    if(node->leaves[i])
-      init_plane(node->leaves[i]);
-  }
-};
-for(auto &kv : surf_map){
-  init_plane(kv.second);
-}
-      std::cout<<"load map finish"<<std::endl;
-  
+
+  // 深拷贝整个 surf_map
+  void deepCopySurfMap(
+      const std::unordered_map<VOXEL_LOC, OctoTree *> &original, std::unordered_map<VOXEL_LOC, OctoTree *> &copy)
+  {
+    copy.reserve(original.size());
+    for (auto &kv : original)
+    {
+      const VOXEL_LOC &key = kv.first;
+      const OctoTree *node = kv.second;
+      copy.emplace(key, node->cloneOctoTree());
+    }
+    return;
   }
 
   // The point-to-plane alignment for odometry
@@ -1075,7 +1087,7 @@ for(auto &kv : surf_map){
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> saes(nnt);
     Eigen::Vector3d evalue = saes.eigenvalues();
-     //printf("eva %d: %lf\n", match_num, evalue[0]);
+    // printf("eva %d: %lf\n", match_num, evalue[0]);
 
     if (evalue[0] < 14)
       return false;
@@ -1367,7 +1379,7 @@ for(auto &kv : surf_map){
           pvec.push_back(pv);
         }
 
-        //cut_voxel(surf_map, pvec, win_size, jour);
+        // cut_voxel(surf_map, pvec, win_size, jour);
         kf.exist = 0;
         history_kfsize--;
         break;
@@ -1426,8 +1438,8 @@ for(auto &kv : surf_map){
     int is_success = 0;
     if (win_count >= win_size)
     {
-      is_success = Initialization::instance().motion_init(pl_origs, vec_imus, beg_times, &hess, voxhess, x_buf, surf_map, surf_map_slide, pvec_buf, win_size, sws, x_curr, imu_pre_buf, extrin_para);
-      std::cout<<"is_success:"<<is_success<<std::endl;
+      is_success = Initialization::instance().motion_init(pl_origs, vec_imus, beg_times, &hess, voxhess, x_buf, surf_map_static, surf_map_slide, pvec_buf, win_size, sws, x_curr, imu_pre_buf, extrin_para);
+      std::cout << "is_success:" << is_success << std::endl;
       if (is_success == 0)
         return -1;
       return 1;
@@ -1534,6 +1546,7 @@ for(auto &kv : surf_map){
 
     for (auto iter = feat_map.begin(); iter != feat_map.end();)
     {
+      // 最旧的帧对应的体素标记为 isexist = false
       if (iter->second->isexist)
         iter++;
       else
@@ -1610,6 +1623,8 @@ for(auto &kv : surf_map){
   {
     PLV(3)
     pwld;
+    std::deque<PLV(3)> pwlds;
+    std::deque<PVecPtr> pvecptrs;
     double down_sizes[3] = {0.1, 0.2, 0.4};
     Eigen::Vector3d last_pos(0, 0, 0);
     double jour = 0;
@@ -1641,7 +1656,7 @@ for(auto &kv : surf_map){
       {
         break;
       }
-      
+
       deque<sensor_msgs::Imu::Ptr> imus;
       if (!sync_packages(pcl_curr, imus, odom_ekf))
       {
@@ -1709,43 +1724,41 @@ for(auto &kv : surf_map){
 
       if (motion_init_flag)
       {
-        //0603
-        // x_curr.p = Eigen::Vector3d(11.5402, 12.5136, 0.05);
-        // Eigen::Matrix3d R;
-        // R << 0.032015, -0.999461, 0.00720392, 
-        // 0.999397, 0.0319141 , -0.0136993, 
-        // 0.013462, 0.00763815,  0.99988;
-        //laserscan3d
-        x_curr.p = Eigen::Vector3d(6.88, 10.85, -0.2);
+        // 0603
+        x_curr.p = Eigen::Vector3d(11.5402, 12.5136, 0.05);
         Eigen::Matrix3d R;
-        R << 0.991824, -0.126672, -0.0154664, 
-        0.126695, 0.991942  , 0.000484272, 
-        0.0152804, -0.00243982 ,  0.99988 ;
-        //0430
-        // x_curr.p = Eigen::Vector3d(18.6758, -6.89524, 0);
-        // Eigen::Matrix3d R;
-        // R << -0.0760827 , 0.997075 , 0.00722731 , 
-        // -0.997055 , -0.0761469  , 0.00906114 , 
-        // 0.00958497, -0.00651663 ,   0.999933 ;
-        //0630
-        // x_curr.p = Eigen::Vector3d(16.1143, 14.3976, 0.15);
-        // Eigen::Matrix3d R;
-        // R << -0.16833, -0.985633, 0.0139113, 
-        // 0.985698, -0.168423  , -0.00581409, 
-        // 0.00807353, 0.0127336 ,  0.999886 ;
-        
-
+        R << 0.032015, -0.999461, 0.00720392,
+            0.999397, 0.0319141, -0.0136993,
+            0.013462, 0.00763815, 0.99988;
+        // laserscan3d
+        //  x_curr.p = Eigen::Vector3d(6.88, 10.85, -0.2);
+        //  Eigen::Matrix3d R;
+        //  R << 0.991824, -0.126672, -0.0154664,
+        //  0.126695, 0.991942  , 0.000484272,
+        //  0.0152804, -0.00243982 ,  0.99988 ;
+        // 0430
+        //  x_curr.p = Eigen::Vector3d(18.6758, -6.89524, 0);
+        //  Eigen::Matrix3d R;
+        //  R << -0.0760827 , 0.997075 , 0.00722731 ,
+        //  -0.997055 , -0.0761469  , 0.00906114 ,
+        //  0.00958497, -0.00651663 ,   0.999933 ;
+        // 0630
+        //  x_curr.p = Eigen::Vector3d(16.1143, 14.3976, 0.15);
+        //  Eigen::Matrix3d R;
+        //  R << -0.16833, -0.985633, 0.0139113,
+        //  0.985698, -0.168423  , -0.00581409,
+        //  0.00807353, 0.0127336 ,  0.999886 ;
 
         x_curr.R = R;
-        std::cout<<"x_curr.p"<<x_curr.p<<std::endl;
-        std::cout<<"x_curr.R"<<x_curr.R<<std::endl;
+        std::cout << "x_curr.p" << x_curr.p << std::endl;
+        std::cout << "x_curr.R" << x_curr.R << std::endl;
         int init = initialization(imus, hess, voxhess, pwld, pcl_curr);
-        std::cout<<"init:"<<init<<std::endl;
+        std::cout << "init:" << init << std::endl;
 
         if (init == 1)
         {
           motion_init_flag = 0;
-          std::cout<<"motion_init_flag:"<<motion_init_flag<<std::endl;
+          std::cout << "motion_init_flag:" << motion_init_flag << std::endl;
         }
         else
         {
@@ -1781,6 +1794,14 @@ for(auto &kv : surf_map){
 
         pwld.clear();
         pvec_update(pptr, x_curr, pwld);
+        // pwlds.push_back(pwld);
+        // pvecptrs.push_back(pptr);
+        if (pwlds.size() > win_size)
+        {
+          pwlds.pop_front();
+          pvecptrs.pop_front();
+        }
+
         ResultOutput::instance().pub_localtraj(pwld, jour, x_curr, sessionNames.size() - 1, pcl_path);
 
         t1 = ros::Time::now().toSec();
@@ -1797,24 +1818,84 @@ for(auto &kv : surf_map){
         keyframe_loading(jour);
         voxhess.clear();
         voxhess.win_size = win_size;
-        unordered_map<VOXEL_LOC, OctoTree *> temp_surf_map;
-        temp_surf_map = surf_map;
-        std::cout<<"temp_surf_map.size():"<<temp_surf_map.size()<<std::endl;
-        cut_voxel(temp_surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
-        // cut_voxel(surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
-        //cut_voxel_multi(surf_map, pvec_buf[win_count - 1], win_count - 1, surf_map_slide, win_size, pwld, sws);
-        t2 = ros::Time::now().toSec();
-        multi_recut(temp_surf_map, win_count, x_buf, voxhess, sws);
-        //multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
-        //multi_recut(surf_map, win_count, x_buf, voxhess, sws);
-        // for (auto iter = surf_map.begin(); iter != surf_map.end(); ++iter)
+
+        // unordered_map<VOXEL_LOC, OctoTree *> temp_surf_map;
+        // temp_surf_map = surf_map;
+        // // std::cout<<"temp_surf_map.size():"<<temp_surf_map.size()<<std::endl;
+        // // std::cout<<"pvec_buf.size():"<<pvec_buf.size()<<std::endl;
+        // // std::cout<<"x_buf.size():"<<x_buf.size()<<std::endl;
+        // PVecPtr temp_pvec(new PVec);
+        // PLV(3) temp_pwld;
+        // for(int a = 0; a < pwlds.size(); a++)
         // {
-  
-        //   //iter->second->recut(win_size, x_buf, sws[0]);
-        //   iter->second->tras_opt(voxhess);
+
+        //   for(int b = 0; b < pwlds[a].size(); b++)
+        //   {
+        //     temp_pwld.push_back(pwlds[a][b]);
+
+        //   }
+        //   PVecPtr pvec_ptr = pvecptrs[a];
+        //   int n = 0;
+        //   for (const pointVar &pv : *pvec_ptr) {
+        //     pointVar point;
+        //     point.pnt = x_curr.R.inverse() * (pwlds[a][n] - x_curr.p);
+        //     point.var = pv.var;
+        //     n++;
+        //     temp_pvec->push_back(point);
         // }
+        // }
+
+        vector<OctoTree *> octos;
+        vector<SlideWindow *> sws_temp;
+
+        for (auto iter = surf_map.begin(); iter != surf_map.end(); iter++)
+        {
+          iter->second->tras_ptr(octos);
+          iter->second->clear_slwd(sws_temp);
+          delete iter->second;
+        }
+
+        for (int i = 0; i < octos.size(); i++)
+          delete octos[i];
+        octos.clear();
+
+        for (int i = 0; i < sws_temp.size(); i++)
+          delete sws_temp[i];
+        sws_temp.clear();
+        malloc_trim(0);
+        surf_map.clear();
+        surf_map_slide.clear();
+
+        deepCopySurfMap(surf_map_static, surf_map);
+
+        // 把滑窗内所有帧都插入到 surf_map 中
+        //    这样 BA 时既有全局先验，又保留了滑窗内的多帧约束
+
+        for (int i = 0; i < win_count; ++i)
+        {
+          // 先把第 i 帧的点从局部坐标变到世界坐标
+          PLV(3)
+          temp_pwld;
+          pwld.reserve(pvec_buf[i]->size());
+          for (const pointVar &pv : *pvec_buf[i])
+          {
+            temp_pwld.push_back(x_buf[i].R * pv.pnt + x_buf[i].p);
+          }
+          // idx 参数选择 “滑窗内的全局帧号”
+          int frame_idx = i;
+          cut_voxel(surf_map, pvec_buf[i], frame_idx, surf_map_slide, win_size, temp_pwld, sws[0]);
+        }
+
+        // cut_voxel(surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
+        //  // cut_voxel(temp_surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
+        //  //cut_voxel(temp_surf_map, temp_pvec, win_count-1, surf_map_slide, win_size, temp_pwld, sws[0]);
+
+        t2 = ros::Time::now().toSec();
+        // // multi_recut(temp_surf_map, win_count, x_buf, voxhess, sws);
+        multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
+
         t3 = ros::Time::now().toSec();
-        //std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
+        // std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
         if (degrade_cnt > degrade_bound)
         {
           degrade_cnt = 0;
@@ -1850,8 +1931,8 @@ for(auto &kv : surf_map){
         }
         else
         {
-           LI_BA_Optimizer opt_lsv;
-           opt_lsv.damping_iter(x_buf, voxhess, imu_pre_buf, &hess);
+          LI_BA_Optimizer opt_lsv;
+          opt_lsv.damping_iter(x_buf, voxhess, imu_pre_buf, &hess);
         }
 
         ScanPose *bl = new ScanPose(x_buf[0], pvec_buf[0]);
@@ -1868,7 +1949,7 @@ for(auto &kv : surf_map){
 
         ResultOutput::instance().pub_localmap(mgsize, sessionNames.size() - 1, pvec_buf, x_buf, pcl_path, win_base, win_count);
 
-        //multi_margi(surf_map_slide, jour, win_count, x_buf, voxhess, sws[0]);
+        multi_margi(surf_map_slide, jour, win_count, x_buf, voxhess, sws[0]);
         t6 = ros::Time::now().toSec();
 
         if ((win_base + win_count) % 10 == 0)
@@ -1924,17 +2005,17 @@ for(auto &kv : surf_map){
       // printf("%d: %lf %lf %lf\n", win_base + win_count, x_curr.p[0], x_curr.p[1], x_curr.p[2]);
     }
 
-    // vector<OctoTree *> octos;
-    // for (auto iter = surf_map.begin(); iter != surf_map.end(); iter++)
-    // {
-    //   iter->second->tras_ptr(octos);
-    //   iter->second->clear_slwd(sws[0]);
-    //   delete iter->second;
-    // }
+    vector<OctoTree *> octos;
+    for (auto iter = surf_map.begin(); iter != surf_map.end(); iter++)
+    {
+      iter->second->tras_ptr(octos);
+      iter->second->clear_slwd(sws[0]);
+      delete iter->second;
+    }
 
-    // for (int i = 0; i < octos.size(); i++)
-    //   delete octos[i];
-    // octos.clear();
+    for (int i = 0; i < octos.size(); i++)
+      delete octos[i];
+    octos.clear();
 
     for (int i = 0; i < sws[0].size(); i++)
       delete sws[0][i];
@@ -2858,8 +2939,8 @@ int main(int argc, char **argv)
   // for (int i = 0; i < vs.win_size; i++)
   //   mp[i] = i;
 
-  //thread thread_loop(&VOXEL_SLAM::thd_loop_closure, &vs, ref(n));
-  //thread thread_gba(&VOXEL_SLAM::thd_globalmapping, &vs, ref(n));
+  // thread thread_loop(&VOXEL_SLAM::thd_loop_closure, &vs, ref(n));
+  // thread thread_gba(&VOXEL_SLAM::thd_globalmapping, &vs, ref(n));
   vs.thd_odometry_localmapping(n);
 
   // thread_loop.join();

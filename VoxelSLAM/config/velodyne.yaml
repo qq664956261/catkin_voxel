@@ -21,7 +21,7 @@ Odometry:
   down_size: 0.25 # 0.1
   beam_err: 0.01
   dept_err: 0.01
-  voxel_size: 2 # 1
+  voxel_size: 0.5 # 1
   min_eigen_value: 0.01 # 0.0025
   degrade_bound: 100
   point_notime: 0

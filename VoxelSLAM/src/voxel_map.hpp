@@ -968,6 +968,63 @@ public:
 
     // ins = 255.0*rand()/(RAND_MAX + 1.0f);
   }
+  OctoTree()
+  {
+
+  }
+
+  // 递归深拷贝一个 OctoTree 节点及其子树
+   OctoTree* cloneOctoTree()const {
+  if (!this) return nullptr;
+  
+  // 创建新节点
+  OctoTree* copy = new OctoTree();
+
+  // 1. 拷贝基本成员（值类型和 STL 容器）
+  copy->octo_state   = this->octo_state;
+  copy->layer        = this->layer;
+  copy->isexist      = this->isexist;
+  copy->jour         = this->jour;
+  copy->plane        = this->plane;       // Plane 没有指针，直接拷贝即可
+  copy->pcr_add      = this->pcr_add;
+  copy->eig_value    = this->eig_value;
+  copy->eig_vector   = this->eig_vector;
+  copy->cov_add      = this->cov_add;
+  copy->pcr_fix      = this->pcr_fix;
+  copy->point_fix    = this->point_fix;
+  copy->wdsize       = this->wdsize;
+  copy->jour         = this->jour;
+  copy->quater_length = this->quater_length;
+  copy->last_num = this->last_num;
+  copy->opt_state = this->opt_state;
+  //copy->mVox = orig->mVox;
+
+  std::copy(std::begin(this->voxel_center),
+  std::end(this->voxel_center),
+  std::begin(copy->voxel_center));
+  // 2. 深拷贝滑窗数据 SlideWindow
+  if (this->sw) {
+      // 依赖 SlideWindow 拷贝构造函数实现正确的深拷贝
+      copy->sw = new SlideWindow(*this->sw);
+  } else {
+      copy->sw = nullptr;
+  }
+
+  // 3. 递归拷贝 8 个子节点
+    // ——递归复制子节点——
+    for (int i = 0; i < 8; ++i) {
+      if (this->leaves[i]) {
+        copy->leaves[i] = this->leaves[i]->cloneOctoTree();
+      } else {
+        copy->leaves[i] = nullptr;
+      }
+    }
+
+  return copy;
+}
+
+
+
 
   inline void push(int ord, const pointVar &pv, const Eigen::Vector3d &pw, vector<SlideWindow*> &sws)
   {

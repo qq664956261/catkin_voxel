@@ -20,7 +20,7 @@ Odometry:
   rdw_gyr: 0.0001
   rdw_acc: 0.0001
   # down_size: 0.5
-  down_size: 0.1
+  down_size: 0.2
   dept_err: 0.02
   beam_err: 0.05
   # voxel_size: 4
@@ -30,7 +30,7 @@ Odometry:
   point_notime: 0
 
 LocalBA:
-  win_size: 10
+  win_size: 5
   max_layer: 2
   cov_gyr: 0.01
   cov_acc: 2

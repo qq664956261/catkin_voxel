@@ -325,7 +325,7 @@ public:
     pl_full.reserve(plsize);
     //double t0 = pl_orig[0].timestamp;
     double t0 = msg->header.stamp.toSec();
-    std::cout<<"t0:"<<std::to_string(t0)<<std::endl;
+    // std::cout<<"t0:"<<std::to_string(t0)<<std::endl;
     for(int i=0; i<plsize; i++)
     {
       PointType ap;
