@@ -818,9 +818,9 @@ public:
 
     sub_imu = n.subscribe(imu_topic, 80000, imu_handler);
     if (feat.lidar_type == LIVOX)
-      sub_pcl = n.subscribe<livox_ros_driver::CustomMsg>(lid_topic, 1000, pcl_handler);
+      sub_pcl = n.subscribe<livox_ros_driver::CustomMsg>(lid_topic, 1, pcl_handler);
     else
-      sub_pcl = n.subscribe<sensor_msgs::PointCloud2>(lid_topic, 1000, pcl_handler);
+      sub_pcl = n.subscribe<sensor_msgs::PointCloud2>(lid_topic, 1, pcl_handler);
     odom_ekf.imu_topic = imu_topic;
 
     n.param<double>("Odometry/cov_gyr", cov_gyr, 0.1);
@@ -973,18 +973,48 @@ public:
   }
 
   // 深拷贝整个 surf_map
+  // void deepCopySurfMap(
+  //     const std::unordered_map<VOXEL_LOC, OctoTree *> &original, std::unordered_map<VOXEL_LOC, OctoTree *> &copy)
+  // {
+  //   copy.reserve(original.size());
+  //   for (auto &kv : original)
+  //   {
+  //     const VOXEL_LOC &key = kv.first;
+  //     const OctoTree *node = kv.second;
+  //     copy.emplace(key, node->cloneOctoTree());
+  //   }
+  //   return;
+  // }
   void deepCopySurfMap(
-      const std::unordered_map<VOXEL_LOC, OctoTree *> &original, std::unordered_map<VOXEL_LOC, OctoTree *> &copy)
-  {
-    copy.reserve(original.size());
-    for (auto &kv : original)
-    {
-      const VOXEL_LOC &key = kv.first;
-      const OctoTree *node = kv.second;
-      copy.emplace(key, node->cloneOctoTree());
+    const std::unordered_map<VOXEL_LOC, OctoTree*> &original,
+    std::unordered_map<VOXEL_LOC, OctoTree*> &copy)
+{
+    // 1) 将 map 拷贝到 vector 中
+    std::vector<std::pair<VOXEL_LOC, OctoTree*>> items;
+    items.reserve(original.size());
+    for (auto &kv : original) {
+        items.emplace_back(kv.first, kv.second);
     }
-    return;
-  }
+
+    // 2) 并行 clone
+    std::vector<std::pair<VOXEL_LOC, OctoTree*>> clones(items.size());
+    std::transform(
+        std::execution::par, 
+        items.begin(), items.end(), 
+        clones.begin(),
+        [](auto &kv) {
+            // kv.first：VOXEL_LOC，kv.second：原节点指针
+            // cloneOctoTree 必须是线程安全的（不访问全局状态）
+            return std::make_pair(kv.first, kv.second->cloneOctoTree());
+        }
+    );
+
+    // 3) 批量插入到 unordered_map（单线程安全）
+    copy.reserve(clones.size());
+    for (auto &kv : clones) {
+        copy.emplace(std::move(kv.first), kv.second);
+    }
+}
 
   // The point-to-plane alignment for odometry
   bool lio_state_estimation(PVecPtr pptr)
@@ -1719,7 +1749,9 @@ public:
         first_flag = 0;
       }
 
-      double t0 = ros::Time::now().toSec();
+      double t0 = std::chrono::duration<double, std::milli>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
       double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
 
       if (motion_init_flag)
@@ -1804,7 +1836,9 @@ public:
 
         ResultOutput::instance().pub_localtraj(pwld, jour, x_curr, sessionNames.size() - 1, pcl_path);
 
-        t1 = ros::Time::now().toSec();
+        t1 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
 
         win_count++;
         x_buf.push_back(x_curr);
@@ -1868,9 +1902,12 @@ public:
 
         deepCopySurfMap(surf_map_static, surf_map);
 
+
         // 把滑窗内所有帧都插入到 surf_map 中
         //    这样 BA 时既有全局先验，又保留了滑窗内的多帧约束
-
+      //   auto before = std::chrono::duration<double, std::milli>(
+      //     std::chrono::system_clock::now().time_since_epoch()
+      // ).count();
         for (int i = 0; i < win_count; ++i)
         {
           // 先把第 i 帧的点从局部坐标变到世界坐标
@@ -1885,16 +1922,23 @@ public:
           int frame_idx = i;
           cut_voxel(surf_map, pvec_buf[i], frame_idx, surf_map_slide, win_size, temp_pwld, sws[0]);
         }
-
+      //   auto after = std::chrono::duration<double, std::milli>(
+      //     std::chrono::system_clock::now().time_since_epoch()
+      // ).count();
+      // std::cout<<"before - after"<<std::to_string(before - after)<<std::endl;
         // cut_voxel(surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         //  // cut_voxel(temp_surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         //  //cut_voxel(temp_surf_map, temp_pvec, win_count-1, surf_map_slide, win_size, temp_pwld, sws[0]);
 
-        t2 = ros::Time::now().toSec();
+        t2 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
         // // multi_recut(temp_surf_map, win_count, x_buf, voxhess, sws);
         multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
 
-        t3 = ros::Time::now().toSec();
+        t3 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
         // std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
         if (degrade_cnt > degrade_bound)
         {
@@ -1918,7 +1962,9 @@ public:
 
       if (win_count >= win_size)
       {
-        t4 = ros::Time::now().toSec();
+        t4 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
 
         if (g_update == 2)
         {
@@ -1945,12 +1991,16 @@ public:
 
         x_curr.R = x_buf[win_count - 1].R;
         x_curr.p = x_buf[win_count - 1].p;
-        t5 = ros::Time::now().toSec();
+        t5 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
 
         ResultOutput::instance().pub_localmap(mgsize, sessionNames.size() - 1, pvec_buf, x_buf, pcl_path, win_base, win_count);
 
         multi_margi(surf_map_slide, jour, win_count, x_buf, voxhess, sws[0]);
-        t6 = ros::Time::now().toSec();
+        t6 = std::chrono::duration<double, std::milli>(
+          std::chrono::system_clock::now().time_since_epoch()
+      ).count();
 
         if ((win_base + win_count) % 10 == 0)
         {
@@ -1998,9 +2048,18 @@ public:
         win_count -= mgsize;
       }
 
-      double t_end = ros::Time::now().toSec();
+      double t_end = std::chrono::duration<double, std::milli>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
       double mem = get_memory();
-      // printf("%d: %.4lf: %.4lf %.4lf %.4lf %.4lf %.4lf %.2lfGb %.1lf\n", win_base+win_count, t_end-t0, t1-t0, t2-t1, t3-t2, t5-t4, t6-t5, mem, jour);
+      //printf("%d: %.4lf: %.4lf %.4lf %.4lf %.4lf %.4lf %.2lfGb %.1lf\n", win_base+win_count, t_end-t0, t1-t0, t2-t1, t3-t2, t5-t4, t6-t5, mem, jour);
+      // std::cout<<"t_end-t0:"<<std::to_string(t_end-t0)<<std::endl;
+      // std::cout<<"t1-t0:"<<std::to_string(t1-t0)<<std::endl;
+      // std::cout<<"t2-t1:"<<std::to_string(t2-t1)<<std::endl;
+      // std::cout<<"t3-t2:"<<std::to_string(t3-t2)<<std::endl;
+      // std::cout<<"t4-t3:"<<std::to_string(t4-t3)<<std::endl;
+      // std::cout<<"t5-t4:"<<std::to_string(t5-t4)<<std::endl;
+      // std::cout<<"t6-t5:"<<std::to_string(t6-t5)<<std::endl;
 
       // printf("%d: %lf %lf %lf\n", win_base + win_count, x_curr.p[0], x_curr.p[1], x_curr.p[2]);
     }
@@ -2549,8 +2608,7 @@ public:
     pub_pl_func(pl0, pub_scan);
 
     double t0 = ros::Time::now().toSec();
-    while (gba_flag)
-      ;
+    while (gba_flag);
 
     for (PGO_Edge &edge : gba_edges1.edges)
     {

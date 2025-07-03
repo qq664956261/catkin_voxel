@@ -22,7 +22,7 @@
 #include <Eigen/SparseQR>
 #include "BTC.h"
 #include <pcl/common/transforms.h> 
-
+#include <execution>
 using namespace std;
 pcl::PointCloud<pcl::PointXYZI>::Ptr map_ptr;
 ros::Publisher pub_scan, pub_cmap, pub_init, pub_pmap;
