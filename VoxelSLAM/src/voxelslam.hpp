@@ -13,14 +13,8 @@
 #include <geometry_msgs/PoseArray.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <malloc.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/navigation/ImuFactor.h>
-#include <gtsam/navigation/CombinedImuFactor.h>
-#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <Eigen/Sparse>
 #include <Eigen/SparseQR>
-#include "BTC.h"
 #include <pcl/common/transforms.h> 
 #include <execution>
 using namespace std;
@@ -216,47 +210,6 @@ void pvec_update(PVecPtr pptr, IMUST &x_curr, PLV(3) &pwld)
   }
 }
 
-// Read the alidarstate.txt
-void read_lidarstate(string filename, vector<ScanPose*> &bl_tem)
-{
-  ifstream file(filename);
-  if(!file.is_open())
-  {
-    printf("Error: %s not found\n", filename.c_str());
-    exit(0);
-  }
-
-  string lineStr, str;
-  vector<double> nums;
-  while(getline(file, lineStr))
-  {
-    nums.clear();
-    stringstream ss(lineStr);
-    while(getline(ss, str, ' '))
-      nums.push_back(stod(str));
-    
-    IMUST xx;
-    xx.t = nums[0];
-    xx.p << nums[1], nums[2], nums[3];
-    xx.R = Eigen::Quaterniond(nums[7], nums[4], nums[5], nums[6]).matrix();
-
-    if(nums.size() >= 20)
-    {
-      xx.v << nums[8], nums[9], nums[10];
-      xx.bg << nums[11], nums[12], nums[13];
-      xx.ba << nums[14], nums[15], nums[16];
-      xx.g << nums[17], nums[18], nums[19];
-    }
-
-    ScanPose* blp = new ScanPose(xx, nullptr);
-    bl_tem.push_back(blp);
-
-    if(nums.size() >= 26)
-      for(int i=0; i<6; i++) 
-        blp->v6[i] = nums[i + 20];
-  }
-}
-
 double get_memory()
 {
   ifstream infile("/proc/self/status");
@@ -281,24 +234,4 @@ double get_memory()
   return mem / (1048576);
 }
 
-void icp_check(pcl::PointCloud<PointType> &pl_src, pcl::PointCloud<PointType> &pl_tar, ros::Publisher &pub_src, ros::Publisher &pub_tar, pair<Eigen::Vector3d, Eigen::Matrix3d> &loop_transform, IMUST &xx)
-{
-  pcl::PointCloud<PointType> pl1, pl2;
-  for(PointType ap: pl_src.points)
-  {
-    Eigen::Vector3d v(ap.x, ap.y, ap.z);
-    v = loop_transform.second * v + loop_transform.first;
-    v = xx.R * v + xx.p;
-    ap.x = v[0]; ap.y = v[1]; ap.z = v[2];
-    pl1.push_back(ap);
-  }
-  for(PointType ap: pl_tar.points)
-  {
-    Eigen::Vector3d v(ap.x, ap.y, ap.z);
-    v = xx.R * v + xx.p;
-    ap.x = v[0]; ap.y = v[1]; ap.z = v[2];
-    pl2.push_back(ap);
-  }
-  pub_pl_func(pl1, pub_src); pub_pl_func(pl2, pub_tar);
-}
 

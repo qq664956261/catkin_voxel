@@ -25,12 +25,13 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
-find_package(GTSAM REQUIRED QUIET)
+find_package(TBB REQUIRED)
+#find_package(GTSAM REQUIRED QUIET)
 # find_package(Ceres REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs 
-  DEPENDS EIGEN3 PCL GTSAM
+  DEPENDS EIGEN3 PCL 
   INCLUDE_DIRS
 )
 
@@ -39,11 +40,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 # ${CERES_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIR}
+  #${GTSAM_INCLUDE_DIR}
 )
 
-add_executable(voxelslam src/voxelslam.cpp src/BTC.cpp)
-target_link_libraries(voxelslam ${catkin_LIBRARIES} ${PCL_LIBRARIES} gtsam)
+add_executable(voxelslam src/voxelslam.cpp )
+target_link_libraries(voxelslam ${catkin_LIBRARIES} ${PCL_LIBRARIES} TBB::tbb)
 
 
 

@@ -7,7 +7,6 @@
 #include <Eigen/Eigenvalues>
 #include <unordered_set>
 #include <mutex>
-
 #include <ros/ros.h>
 #include <fstream>
 
