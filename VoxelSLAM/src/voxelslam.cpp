@@ -896,6 +896,7 @@ public:
     pcl::io::loadPCDFile(map_path, *map_pc);
     // 2. 下采样（可选，减少点数）
     down_sampling_voxel(*map_pc, 0.05); // 你已有的 down_sampling_voxel
+    std::cout<<"map_pc->point.size():"<<map_pc->points.size()<<std::endl;
 
     // 3. 分配给 prior_pvec 和 pwld
     PVecPtr prior_pvec(new PVec());
@@ -906,7 +907,7 @@ public:
     IMUST T;
     T.R.setIdentity();
     T.p.setZero();
-    var_init(T, *map_pc, prior_pvec, 0.01, 0.01);
+    var_init(T, *map_pc, prior_pvec, 0.005, 0.005);
 
     for (auto &pt : map_pc->points)
     {
@@ -931,7 +932,7 @@ public:
     cut_voxel_multi(
         /*feat_map=*/surf_map_static,
         /*pvec=*/prior_pvec,
-        /*win_count=*/0,
+        /*win_count=*区分静态地图点和滑窗点*/ -1,
         /*feat_tem_map=*/surf_map_slide,
         /*wdsize=*/win_size,
         /*pwld=*/pwld,
@@ -986,35 +987,37 @@ public:
   //   return;
   // }
   void deepCopySurfMap(
-    const std::unordered_map<VOXEL_LOC, OctoTree*> &original,
-    std::unordered_map<VOXEL_LOC, OctoTree*> &copy)
-{
+      const std::unordered_map<VOXEL_LOC, OctoTree *> &original,
+      std::unordered_map<VOXEL_LOC, OctoTree *> &copy)
+  {
     // 1) 将 map 拷贝到 vector 中
-    std::vector<std::pair<VOXEL_LOC, OctoTree*>> items;
+    std::vector<std::pair<VOXEL_LOC, OctoTree *>> items;
     items.reserve(original.size());
-    for (auto &kv : original) {
-        items.emplace_back(kv.first, kv.second);
+    for (auto &kv : original)
+    {
+      items.emplace_back(kv.first, kv.second);
     }
 
     // 2) 并行 clone
-    std::vector<std::pair<VOXEL_LOC, OctoTree*>> clones(items.size());
+    std::vector<std::pair<VOXEL_LOC, OctoTree *>> clones(items.size());
     std::transform(
-        std::execution::par, 
-        items.begin(), items.end(), 
+        std::execution::par,
+        items.begin(), items.end(),
         clones.begin(),
-        [](auto &kv) {
-            // kv.first：VOXEL_LOC，kv.second：原节点指针
-            // cloneOctoTree 必须是线程安全的（不访问全局状态）
-            return std::make_pair(kv.first, kv.second->cloneOctoTree());
-        }
-    );
+        [](auto &kv)
+        {
+          // kv.first：VOXEL_LOC，kv.second：原节点指针
+          // cloneOctoTree 必须是线程安全的（不访问全局状态）
+          return std::make_pair(kv.first, kv.second->cloneOctoTree());
+        });
 
     // 3) 批量插入到 unordered_map（单线程安全）
     copy.reserve(clones.size());
-    for (auto &kv : clones) {
-        copy.emplace(std::move(kv.first), kv.second);
+    for (auto &kv : clones)
+    {
+      copy.emplace(std::move(kv.first), kv.second);
     }
-}
+  }
 
   // The point-to-plane alignment for odometry
   bool lio_state_estimation(PVecPtr pptr)
@@ -1750,8 +1753,8 @@ public:
       }
 
       double t0 = std::chrono::duration<double, std::milli>(
-        std::chrono::system_clock::now().time_since_epoch()
-    ).count();
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count();
       double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0;
 
       if (motion_init_flag)
@@ -1837,8 +1840,8 @@ public:
         ResultOutput::instance().pub_localtraj(pwld, jour, x_curr, sessionNames.size() - 1, pcl_path);
 
         t1 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
 
         win_count++;
         x_buf.push_back(x_curr);
@@ -1902,12 +1905,11 @@ public:
 
         deepCopySurfMap(surf_map_static, surf_map);
 
-
         // 把滑窗内所有帧都插入到 surf_map 中
         //    这样 BA 时既有全局先验，又保留了滑窗内的多帧约束
-      //   auto before = std::chrono::duration<double, std::milli>(
-      //     std::chrono::system_clock::now().time_since_epoch()
-      // ).count();
+        //   auto before = std::chrono::duration<double, std::milli>(
+        //     std::chrono::system_clock::now().time_since_epoch()
+        // ).count();
         for (int i = 0; i < win_count; ++i)
         {
           // 先把第 i 帧的点从局部坐标变到世界坐标
@@ -1922,23 +1924,48 @@ public:
           int frame_idx = i;
           cut_voxel(surf_map, pvec_buf[i], frame_idx, surf_map_slide, win_size, temp_pwld, sws[0]);
         }
-      //   auto after = std::chrono::duration<double, std::milli>(
-      //     std::chrono::system_clock::now().time_since_epoch()
-      // ).count();
-      // std::cout<<"before - after"<<std::to_string(before - after)<<std::endl;
+        //   auto after = std::chrono::duration<double, std::milli>(
+        //     std::chrono::system_clock::now().time_since_epoch()
+        // ).count();
+        // std::cout<<"before - after"<<std::to_string(before - after)<<std::endl;
         // cut_voxel(surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         //  // cut_voxel(temp_surf_map, pvec_buf[win_count-1], win_count-1, surf_map_slide, win_size, pwld, sws[0]);
         //  //cut_voxel(temp_surf_map, temp_pvec, win_count-1, surf_map_slide, win_size, temp_pwld, sws[0]);
 
         t2 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
         // // multi_recut(temp_surf_map, win_count, x_buf, voxhess, sws);
         multi_recut(surf_map_slide, win_count, x_buf, voxhess, sws);
 
+
+        //静态点和滑窗点统计
+        // std::cout<<"oxhess.frame_idxs.size():"<<voxhess.frame_idxs.size()<<std::endl;
+        // int static_num = 0;
+        // int slide_num = 0;
+        // for(int i = 0; i < voxhess.frame_idxs.size(); i++)
+        // {
+        //   for(int j = 0; j < voxhess.frame_idxs[i].size(); j++)
+        //   {
+        //     if(voxhess.frame_idxs[i][j] == -1)
+        //     {
+        //       static_num++;
+
+        //     }
+        //     else{
+        //       slide_num++;
+        //     }
+
+        //   }
+
+        // }
+        // std::cout<<"static_num:"<<static_num<<std::endl;
+        // std::cout<<"slide_num:"<<slide_num<<std::endl;
+
+
         t3 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
         // std::cout<<"degrade_cnt:"<<degrade_cnt<<std::endl;
         if (degrade_cnt > degrade_bound)
         {
@@ -1963,8 +1990,8 @@ public:
       if (win_count >= win_size)
       {
         t4 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
 
         if (g_update == 2)
         {
@@ -1992,15 +2019,15 @@ public:
         x_curr.R = x_buf[win_count - 1].R;
         x_curr.p = x_buf[win_count - 1].p;
         t5 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
 
         ResultOutput::instance().pub_localmap(mgsize, sessionNames.size() - 1, pvec_buf, x_buf, pcl_path, win_base, win_count);
 
         multi_margi(surf_map_slide, jour, win_count, x_buf, voxhess, sws[0]);
         t6 = std::chrono::duration<double, std::milli>(
-          std::chrono::system_clock::now().time_since_epoch()
-      ).count();
+                 std::chrono::system_clock::now().time_since_epoch())
+                 .count();
 
         if ((win_base + win_count) % 10 == 0)
         {
@@ -2049,17 +2076,17 @@ public:
       }
 
       double t_end = std::chrono::duration<double, std::milli>(
-        std::chrono::system_clock::now().time_since_epoch()
-    ).count();
+                         std::chrono::system_clock::now().time_since_epoch())
+                         .count();
       double mem = get_memory();
-      //printf("%d: %.4lf: %.4lf %.4lf %.4lf %.4lf %.4lf %.2lfGb %.1lf\n", win_base+win_count, t_end-t0, t1-t0, t2-t1, t3-t2, t5-t4, t6-t5, mem, jour);
-      // std::cout<<"t_end-t0:"<<std::to_string(t_end-t0)<<std::endl;
-      // std::cout<<"t1-t0:"<<std::to_string(t1-t0)<<std::endl;
-      // std::cout<<"t2-t1:"<<std::to_string(t2-t1)<<std::endl;
-      // std::cout<<"t3-t2:"<<std::to_string(t3-t2)<<std::endl;
-      // std::cout<<"t4-t3:"<<std::to_string(t4-t3)<<std::endl;
-      // std::cout<<"t5-t4:"<<std::to_string(t5-t4)<<std::endl;
-      // std::cout<<"t6-t5:"<<std::to_string(t6-t5)<<std::endl;
+      // printf("%d: %.4lf: %.4lf %.4lf %.4lf %.4lf %.4lf %.2lfGb %.1lf\n", win_base+win_count, t_end-t0, t1-t0, t2-t1, t3-t2, t5-t4, t6-t5, mem, jour);
+      //  std::cout<<"t_end-t0:"<<std::to_string(t_end-t0)<<std::endl;
+      //  std::cout<<"t1-t0:"<<std::to_string(t1-t0)<<std::endl;
+      //  std::cout<<"t2-t1:"<<std::to_string(t2-t1)<<std::endl;
+      //  std::cout<<"t3-t2:"<<std::to_string(t3-t2)<<std::endl;
+      //  std::cout<<"t4-t3:"<<std::to_string(t4-t3)<<std::endl;
+      //  std::cout<<"t5-t4:"<<std::to_string(t5-t4)<<std::endl;
+      //  std::cout<<"t6-t5:"<<std::to_string(t6-t5)<<std::endl;
 
       // printf("%d: %lf %lf %lf\n", win_base + win_count, x_curr.p[0], x_curr.p[1], x_curr.p[2]);
     }
@@ -2608,7 +2635,8 @@ public:
     pub_pl_func(pl0, pub_scan);
 
     double t0 = ros::Time::now().toSec();
-    while (gba_flag);
+    while (gba_flag)
+      ;
 
     for (PGO_Edge &edge : gba_edges1.edges)
     {

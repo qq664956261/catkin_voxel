@@ -110,6 +110,7 @@ class LidarFactor
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  std::vector<std::vector<int>> frame_idxs;    // ← 用来记录每条残差对应的 frame_idx
   vector<PointCluster> sig_vecs;
   vector<vector<PointCluster>> plvec_voxels;
   vector<double> coeffs;
@@ -283,6 +284,7 @@ public:
     sig_vecs.clear(); plvec_voxels.clear();
     eig_values.clear(); eig_vectors.clear();
     pcr_adds.clear(); coeffs.clear();
+    frame_idxs.clear(); 
   }
 
   ~LidarFactor(){}
@@ -939,6 +941,7 @@ class OctoTree
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  std::vector<int> frame_ids;
   SlideWindow* sw = nullptr;
   PointCluster pcr_add;
   Eigen::Matrix<double, 9, 9> cov_add;
@@ -997,6 +1000,7 @@ public:
   copy->quater_length = this->quater_length;
   copy->last_num = this->last_num;
   copy->opt_state = this->opt_state;
+  copy->frame_ids = this->frame_ids;
   //copy->mVox = orig->mVox;
 
   std::copy(std::begin(this->voxel_center),
@@ -1047,6 +1051,7 @@ public:
       sw->points[mord].push_back(pv);
     }
     sw->pcrs_local[mord].push(pv.pnt);
+    frame_ids.push_back(ord);
     pcr_add.push(pw);
     Eigen::Matrix<double, 9, 9> Bi;
     Bf_var(pv, Bi, pw);
@@ -1383,6 +1388,7 @@ public:
           pcrs[i] = sw->pcrs_local[mp[i]];
         opt_state = vox_opt.plvec_voxels.size();
         vox_opt.push_voxel(pcrs, pcr_fix, coe, eig_value, eig_vector, pcr_add);
+        vox_opt.frame_idxs.push_back(frame_ids);
       }
 
     }
